@@ -2,15 +2,46 @@ import os
 import pandas as pd
 import joblib
 from flask import Flask, request, jsonify, render_template
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
 
-# Paths for the saved models
-MODEL_RF_PATH = 'model_rf.joblib'
-MODEL_LR_PATH = 'model_lr.joblib'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_RF_PATH = os.path.join(BASE_DIR, 'model_rf.joblib')
+MODEL_LR_PATH = os.path.join(BASE_DIR, 'model_lr.joblib')
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'titanic_clean.csv')
 
 # Dictionary to store loaded models
 models = {}
+
+
+def get_model_metrics():
+    """Evaluate loaded models on the same stratified holdout used in training."""
+    if not models or not os.path.exists(DATA_PATH):
+        return {}
+
+    df = pd.read_csv(DATA_PATH)
+    feature_cols = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']
+    X_train, X_test, y_train, y_test = train_test_split(
+        df[feature_cols],
+        df['Survived'],
+        test_size=0.2,
+        random_state=42,
+        stratify=df['Survived']
+    )
+    metrics = {}
+    for model_key, label in [('rf', 'Random Forest'), ('lr', 'Regresión Logística')]:
+        model = models.get(model_key)
+        if model is None:
+            continue
+        predictions = model.predict(X_test)
+        metrics[model_key] = {
+            'name': label,
+            'accuracy': round(float(accuracy_score(y_test, predictions)) * 100, 1),
+            'f1': round(float(f1_score(y_test, predictions)) * 100, 1)
+        }
+    return metrics
 
 def load_models():
     """Load joblib models into memory if they exist."""
@@ -34,7 +65,13 @@ load_models()
 @app.route('/')
 def index():
     """Render the main index page."""
-    return render_template('index.html')
+    dataset = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else pd.DataFrame()
+    return render_template(
+        'index.html',
+        metrics=get_model_metrics(),
+        passenger_count=len(dataset),
+        survival_rate=round(float(dataset['Survived'].mean()) * 100, 1) if not dataset.empty else 0
+    )
 
 @app.route('/predict', methods=['POST'])
 def predict():

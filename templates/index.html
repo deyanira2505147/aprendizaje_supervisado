@@ -258,6 +258,33 @@
             }
         }
 
+        /* Titanic dashboard layer */
+        body {
+            align-items: flex-start;
+            background: linear-gradient(180deg, rgba(6, 19, 33, .9), rgba(6, 19, 33, .98)), radial-gradient(circle at 82% 5%, rgba(47, 159, 208, .2), transparent 32rem), var(--bg-color);
+        }
+        body::before { content: ''; position: fixed; inset: 0; z-index: -1; opacity: .24; background-image: linear-gradient(rgba(160, 216, 230, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(160, 216, 230, .05) 1px, transparent 1px); background-size: 58px 58px; mask-image: linear-gradient(to bottom, black, transparent 80%); }
+        .wrapper { max-width: 1100px; padding: 3rem 0; }
+        .card { padding: 0; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+        .header { text-align: left; margin-bottom: 2.2rem; padding: 1.1rem 0 2.5rem; border-bottom: 1px solid var(--border-color); }
+        .header::before { content: 'RMS TITANIC  /  REGISTRO DE PASAJEROS'; display: block; color: var(--accent-cyan); font: 500 .68rem 'DM Mono', monospace; letter-spacing: .16em; margin-bottom: 2rem; }
+        .header h1 { font-size: clamp(3.2rem, 8vw, 6.8rem); line-height: .9; letter-spacing: -.07em; max-width: 720px; }
+        .header h1::after { content: '¿Quién habría llegado a puerto?'; display: block; color: var(--text-primary); }
+        .header h1 { font-size: 0; }
+        .header p { max-width: 590px; line-height: 1.7; font-size: .98rem; }
+        .manifesto { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 3rem; }
+        .manifesto-item { padding: 1.25rem; border: 1px solid var(--border-color); background: rgba(15, 45, 70, .48); }
+        .manifesto-item strong { display: block; color: var(--text-primary); font-size: 1.9rem; letter-spacing: -.05em; }
+        .manifesto-item span { display: block; color: var(--text-secondary); font: .65rem 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; margin-top: .45rem; }
+        .manifesto-item b { color: var(--accent-cyan); font-weight: 500; }
+        .model-selector { max-width: 500px; margin-bottom: 1.5rem; }
+        .panel-caption { color: var(--text-secondary); font: .68rem 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; margin: 2rem 0 1rem; }
+        .result-container { min-height: 150px; text-align: left; border-radius: 0; }
+        .result-val { font-size: 2.5rem; }
+        .result-desc { line-height: 1.6; }
+        .result-container.survived { background: rgba(16, 185, 129, .1); }
+        .result-container.died { background: rgba(239, 68, 68, .1); }
+
         /* Responsive spacing adjustments */
         @media(max-width: 480px) {
             .card {
@@ -270,6 +297,7 @@
             .grid-full {
                 grid-column: span 1;
             }
+            .manifesto { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -280,6 +308,14 @@
                 <h1>Titanic Predictor</h1>
                 <p>Ingresa los detalles para estimar la probabilidad de supervivencia</p>
             </div>
+
+            <div class="manifesto" aria-label="Resumen del dataset y modelos">
+                <div class="manifesto-item"><strong>{{ passenger_count }}</strong><span>pasajeros analizados</span></div>
+                <div class="manifesto-item"><strong>{{ survival_rate }}<b>%</b></strong><span>supervivencia observada</span></div>
+                <div class="manifesto-item"><strong>{{ metrics.get('rf', {}).get('accuracy', 0) }}<b>%</b></strong><span>accuracy · random forest</span></div>
+            </div>
+
+            <div class="panel-caption">Mesa de predicción / elige el algoritmo</div>
 
             <!-- Model Switch Toggler -->
             <div class="model-selector">
